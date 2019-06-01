@@ -5,6 +5,7 @@
 #include <EEPROM.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
+#include <WebSocketsClient.h>
 
 struct CqNodeConfiguration
 {
@@ -20,6 +21,7 @@ class CqNode
 private:
     CqNodeConfiguration _configuration;
     ESP8266WebServer _server;
+    WebSocketsClient _client;
 
     bool _debug;
 
@@ -112,6 +114,57 @@ private:
         log("AP stopped");
     }
 
+    void connect()
+    {
+        log("Configuration loaded...");
+        log("SSID:     " + (String)_configuration.ssid);
+        log("Password: " + (String)_configuration.password);
+        log("Server:   " + (String)_configuration.server);
+        log("Port:     " + (String)_configuration.port);
+
+        log("Connecting to wireless network");
+
+        WiFi.begin(_configuration.ssid, _configuration.password);
+
+        while (WiFi.status() != WL_CONNECTED)
+        {
+            Serial.println("Waiting...");
+
+            delay(1000);
+        }
+
+        log("Connected to wireless network...");
+        log("IP:      " + WiFi.localIP().toString());
+        log("Netmask: " + WiFi.subnetMask().toString());
+        log("Gateway: " + WiFi.gatewayIP().toString());
+        log("DNS:     " + WiFi.dnsIP().toString());
+
+        log("Connecting to server");
+        _client.setReconnectInterval(5000);
+        _client.enableHeartbeat(5000, 2500, 2);
+        // _client.on
+
+        _client.begin(_configuration.server, _configuration.port, "/");
+
+        log("Starting client loop");
+
+        uint32_t counter = 0;
+
+        while (true)
+        {
+            _client.loop();
+
+            char value[10];
+
+            itoa(counter, value, 10);
+            counter++;
+
+            _client.sendTXT(value);
+
+            delay(1000);
+        }
+    }
+
 public:
     CqNode(bool debug) : _server(80)
     {
@@ -150,29 +203,7 @@ public:
         EEPROM.get(0, _configuration);
 
         awaitConfiguration();
-
-        log("Configuration loaded...");
-        log("SSID:     " + (String)_configuration.ssid);
-        log("Password: " + (String)_configuration.password);
-        log("Server:   " + (String)_configuration.server);
-        log("Port:     " + (String)_configuration.port);
-
-        log("Connecting to wireless network");
-
-        WiFi.begin(_configuration.ssid, _configuration.password);
-
-        while (WiFi.status() != WL_CONNECTED)
-        {
-            Serial.println("Waiting...");
-
-            delay(1000);
-        }
-
-        log("Connected to wireless network...");
-        log("IP:      " + WiFi.localIP().toString());
-        log("Netmask: " + WiFi.subnetMask().toString());
-        log("Gateway: " + WiFi.gatewayIP().toString());
-        log("DNS:     " + WiFi.dnsIP().toString());
+        connect();
     }
 
     CqNodeConfiguration GetConfiguration()
