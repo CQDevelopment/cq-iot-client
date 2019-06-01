@@ -9,6 +9,12 @@ void setup()
 {
   pinMode(PIN_ACTION, INPUT_PULLUP);
 
+  node.TestPingEnabled = true;
+  node.SwitchPinCount = 3;
+  // node.SwitchPin = () {
+
+  // };
+
   if (digitalRead(PIN_ACTION) == LOW)
   {
     node.ClearConfiguration();

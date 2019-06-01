@@ -154,18 +154,26 @@ private:
         {
             _client.loop();
 
-            char value[10];
+            if (TestPingEnabled)
+            {
+                char value[10];
 
-            itoa(counter, value, 10);
-            counter++;
+                itoa(counter, value, 10);
+                counter++;
 
-            _client.sendTXT(value);
+                _client.sendTXT(value);
 
-            delay(1000);
+                delay(1000);
+            }
         }
     }
 
 public:
+    bool TestPingEnabled = false;
+    uint8_t SwitchPinCount = 0;
+
+    void SwitchPin(uint8_t index, bool state);
+
     CqNode(bool debug) : _server(80)
     {
         _debug = debug;
@@ -206,10 +214,10 @@ public:
         connect();
     }
 
-    CqNodeConfiguration GetConfiguration()
-    {
-        return _configuration;
-    }
+    // CqNodeConfiguration GetConfiguration()
+    // {
+    //     return _configuration;
+    // }
 };
 
 #endif
