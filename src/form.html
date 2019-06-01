@@ -11,31 +11,27 @@
 </head>
 
 <body>
-    <form method="GET" action="/">
+    <form method="POST" action="/post">
         <table>
             <tr>
-                <td>Access point name</td>
-                <td><input id="accessPointName" type="text" /></td>
+                <td>SSID</td>
+                <td><input name="ssid" type="text" /></td>
             </tr>
             <tr>
                 <td>Password</td>
-                <td><input id="password" type="text" /></td>
+                <td><input name="password" type="password" /></td>
             </tr>
             <tr>
-                <td>SSL thumbprint</td>
-                <td><input id="thumbprint" type="text" /></td>
+                <td>Server</td>
+                <td><input name="server" type="text" /></td>
             </tr>
             <tr>
-                <td>Server hostname</td>
-                <td><input id="server" type="text" /></td>
-            </tr>
-            <tr>
-                <td>Server port</td>
-                <td><input id="port" type="text" /></td>
+                <td>Port</td>
+                <td><input name="port" type="number" /></td>
             </tr>
             <tr>
                 <td>&nbsp;</td>
-                <td><button type="button">Submit</button></td>
+                <td><button type="submit">Submit</button></td>
             </tr>
         </table>
     </form>

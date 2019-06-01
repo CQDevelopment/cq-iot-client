@@ -1,7 +1,7 @@
 #include <Arduino.h>
-#include <CqNodeConfigurator.h>
+#include <cq_node.h>
 
-CqNodeConfigurator configurator(true);
+CqNode node(true);
 
 void setup()
 {
@@ -9,10 +9,10 @@ void setup()
 
   if (digitalRead(D7) == HIGH)
   {
-    configurator.Clear();
+    node.ClearConfiguration();
   }
 
-  configurator.Begin();
+  node.Begin();
 }
 
 void loop()
