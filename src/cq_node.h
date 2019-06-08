@@ -16,6 +16,8 @@ struct CqNodeConfiguration
     uint16_t port = 0;
 };
 
+typedef void (*SwitchPinFunctionPtr)(uint8_t index, bool state);
+
 class CqNode
 {
 private:
@@ -23,6 +25,8 @@ private:
     ESP8266WebServer _server;
     WebSocketsClient _client;
 
+    char _chipId[8];
+    bool _connected = false;
     bool _debug;
 
     void log(String message)
@@ -114,6 +118,38 @@ private:
         log("AP stopped");
     }
 
+    void receive(WStype_t type, uint8_t *payload, size_t length)
+    {
+        if (type == WStype_CONNECTED)
+        {
+            log("Connected to socket server, sending registration");
+            _connected = true;
+
+            char switchPinCount[3];
+
+            itoa(SwitchPinCount, switchPinCount, 10);
+
+            _client.sendTXT("register," + (String)_chipId + "," + switchPinCount);
+
+            return;
+        }
+
+        if (type == WStype_DISCONNECTED)
+        {
+            log("Disconnected from socket server");
+            _connected = false;
+
+            return;
+        }
+
+        if (type == WStype_TEXT)
+        {
+            log("Payload received: " + String((char *)payload));
+
+            return;
+        }
+    }
+
     void connect()
     {
         log("Configuration loaded...");
@@ -142,37 +178,31 @@ private:
         log("Connecting to server");
         _client.setReconnectInterval(5000);
         _client.enableHeartbeat(5000, 2500, 2);
-        // _client.on
+
+        _client.onEvent([this](WStype_t type, uint8_t *payload, size_t length) {
+            this->receive(type, payload, length);
+        });
 
         _client.begin(_configuration.server, _configuration.port, "/");
 
         log("Starting client loop");
 
-        uint32_t counter = 0;
-
         while (true)
         {
             _client.loop();
 
-            if (TestPingEnabled)
+            if (!_connected)
             {
-                char value[10];
-
-                itoa(counter, value, 10);
-                counter++;
-
-                _client.sendTXT(value);
-
+                log("Not connected, waiting...");
                 delay(1000);
             }
         }
     }
 
 public:
-    bool TestPingEnabled = false;
     uint8_t SwitchPinCount = 0;
 
-    void SwitchPin(uint8_t index, bool state);
+    SwitchPinFunctionPtr SwitchPinFunction;
 
     CqNode(bool debug) : _server(80)
     {
@@ -186,6 +216,10 @@ public:
         log("Initialising EEPROM");
 
         EEPROM.begin(512);
+
+        sprintf(_chipId, "%x", ESP.getChipId());
+
+        log("Chip ID: " + (String)_chipId);
     }
 
     CqNode()
@@ -213,11 +247,6 @@ public:
         awaitConfiguration();
         connect();
     }
-
-    // CqNodeConfiguration GetConfiguration()
-    // {
-    //     return _configuration;
-    // }
 };
 
 #endif
