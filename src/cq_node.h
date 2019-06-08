@@ -16,7 +16,11 @@ struct CqNodeConfiguration
     uint16_t port = 0;
 };
 
-typedef void (*SwitchPinFunctionPtr)(uint8_t index, bool state);
+typedef void (*SwitchSetFunctionPtr)(uint8_t index, bool state);
+
+typedef void (*SwitchGetFunctionPtr)(uint8_t index);
+
+typedef void (*SensorGetFunctionPtr)(uint8_t index);
 
 class CqNode
 {
@@ -125,11 +129,18 @@ private:
             log("Connected to socket server, sending registration");
             _connected = true;
 
-            char switchPinCount[3];
+            char buffer[3];
 
-            itoa(SwitchPinCount, switchPinCount, 10);
+            itoa(SwitchCount, buffer, 10);
+            String switchCount = (String)buffer;
 
-            _client.sendTXT("register," + (String)_chipId + "," + switchPinCount);
+            itoa(SensorCount, buffer, 10);
+            String sensorCount = (String)buffer;
+
+            itoa(PushCount, buffer, 10);
+            String pushCount = (String)buffer;
+
+            _client.sendTXT("register," + (String)_chipId + "," + switchCount + ',' + sensorCount + ',' + pushCount);
 
             log("Registration sent");
 
@@ -202,9 +213,13 @@ private:
     }
 
 public:
-    uint8_t SwitchPinCount = 0;
+    uint8_t SwitchCount = 0;
+    uint8_t SensorCount = 0;
+    uint8_t PushCount = 0;
 
-    SwitchPinFunctionPtr SwitchPinFunction;
+    SwitchGetFunctionPtr SwitchGetFunction;
+    SwitchSetFunctionPtr SwitchSetFunction;
+    SensorGetFunctionPtr SensorGetFunction;
 
     CqNode(bool debug) : _server(80)
     {

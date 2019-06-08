@@ -7,7 +7,14 @@ const uint8_t switchPins[] = {D1, D2, D5};
 
 CqNode node(true);
 
-void switchPin(uint8_t index, bool state)
+void switchGet(uint8_t index)
+{
+  bool result = digitalRead(switchPins[index]) == HIGH ? true : false;
+
+  // send here!
+}
+
+void switchSet(uint8_t index, bool state)
 {
   digitalWrite(switchPins[index], state ? HIGH : LOW);
 }
@@ -16,8 +23,9 @@ void setup()
 {
   pinMode(PIN_ACTION, INPUT_PULLUP);
 
-  node.SwitchPinCount = 3;
-  node.SwitchPinFunction = &switchPin;
+  node.SwitchCount = 3;
+  node.SwitchGetFunction = &switchGet;
+  node.SwitchSetFunction = &switchSet;
 
   if (digitalRead(PIN_ACTION) == LOW)
   {
