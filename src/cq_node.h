@@ -131,6 +131,8 @@ private:
 
             _client.sendTXT("register," + (String)_chipId + "," + switchPinCount);
 
+            log("Registration sent");
+
             return;
         }
 
