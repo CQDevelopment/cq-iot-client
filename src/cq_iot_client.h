@@ -1,13 +1,13 @@
-#ifndef H_CQ_NODE
+#ifndef H_CQ_IOT_CLIENT
 
-#define H_CQ_NODE
+#define H_CQ_IOT_CLIENT
 
 #include <EEPROM.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
 #include <WebSocketsClient.h>
 
-struct CqNodeConfiguration
+struct CqIotClientConfiguration
 {
     bool configured = false;
     char ssid[128] = "";
@@ -22,10 +22,10 @@ typedef void (*SwitchGetFunctionPtr)(uint8_t index);
 
 typedef void (*SensorGetFunctionPtr)(uint8_t index);
 
-class CqNode
+class CqIotClient
 {
 private:
-    CqNodeConfiguration _configuration;
+    CqIotClientConfiguration _configuration;
     ESP8266WebServer _server;
     WebSocketsClient _client;
 
@@ -221,7 +221,7 @@ public:
     SwitchSetFunctionPtr SwitchSetFunction;
     SensorGetFunctionPtr SensorGetFunction;
 
-    CqNode(bool debug) : _server(80)
+    CqIotClient(bool debug) : _server(80)
     {
         _debug = debug;
 
@@ -239,9 +239,9 @@ public:
         log("Chip ID: " + (String)_chipId);
     }
 
-    CqNode()
+    CqIotClient()
     {
-        CqNode(false);
+        CqIotClient(false);
     }
 
     // this has to be called before Begin()

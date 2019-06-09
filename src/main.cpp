@@ -1,11 +1,11 @@
 #include <Arduino.h>
-#include <cq_node.h>
+#include <cq_iot_client.h>
 
 #define PIN_ACTION D7
 
 const uint8_t switchPins[] = {D1, D2, D5};
 
-CqNode node(true);
+CqIotClient client(true);
 
 void switchGet(uint8_t index)
 {
@@ -17,22 +17,24 @@ void switchGet(uint8_t index)
 void switchSet(uint8_t index, bool state)
 {
   digitalWrite(switchPins[index], state ? HIGH : LOW);
+
+  switchGet(index);
 }
 
 void setup()
 {
   pinMode(PIN_ACTION, INPUT_PULLUP);
 
-  node.SwitchCount = 3;
-  node.SwitchGetFunction = &switchGet;
-  node.SwitchSetFunction = &switchSet;
+  client.SwitchCount = 3;
+  client.SwitchGetFunction = &switchGet;
+  client.SwitchSetFunction = &switchSet;
 
   if (digitalRead(PIN_ACTION) == LOW)
   {
-    node.ClearConfiguration();
+    client.ClearConfiguration();
   }
 
-  node.Begin();
+  client.Begin();
 }
 
 void loop()
