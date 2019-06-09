@@ -9,14 +9,14 @@ CqIotClient client(true);
 
 void switchGet(uint8_t index)
 {
-  bool result = digitalRead(switchPins[index]) == HIGH ? true : false;
+  bool state = digitalRead(switchPins[index]) == HIGH ? true : false;
 
-  // send here!
+  client.SendSwitchState(index, state);
 }
 
-void switchSet(uint8_t index, bool state)
+void switchSet(uint8_t index, uint8_t state)
 {
-  digitalWrite(switchPins[index], state ? HIGH : LOW);
+  digitalWrite(switchPins[index], state == 1 ? HIGH : LOW);
 
   switchGet(index);
 }
@@ -24,6 +24,11 @@ void switchSet(uint8_t index, bool state)
 void setup()
 {
   pinMode(PIN_ACTION, INPUT_PULLUP);
+
+  for (uint8_t i = 0; i < sizeof(switchPins); i++)
+  {
+    pinMode(switchPins[i], OUTPUT);
+  }
 
   client.SwitchCount = 3;
   client.SwitchGetFunction = &switchGet;

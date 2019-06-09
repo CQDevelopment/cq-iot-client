@@ -16,7 +16,7 @@ struct CqIotClientConfiguration
     uint16_t port = 0;
 };
 
-typedef void (*SwitchSetFunctionPtr)(uint8_t index, bool state);
+typedef void (*SwitchSetFunctionPtr)(uint8_t index, uint8_t state);
 
 typedef void (*SwitchGetFunctionPtr)(uint8_t index);
 
@@ -157,9 +157,31 @@ private:
 
         if (type == WStype_TEXT)
         {
-            log("Payload received: " + String((char *)payload));
+            char *charPayload = (char *)payload;
 
-            return;
+            log("Payload received: " + String(charPayload));
+
+            char *token;
+            String command[3];
+            uint8_t counter = 0;
+
+            while ((token = strsep(&charPayload, ",")))
+            {
+                command[counter] = token;
+                counter++;
+            }
+
+            if (command[0] == "getSwitch")
+            {
+                SwitchGetFunction(command[1].toInt());
+
+                return;
+            }
+
+            if (command[0] == "setSwitch")
+            {
+                SwitchSetFunction(command[1].toInt(), command[2].toInt());
+            }
         }
     }
 
@@ -263,6 +285,15 @@ public:
 
         awaitConfiguration();
         connect();
+    }
+
+    void SendSwitchState(uint8_t index, boolean state)
+    {
+        char indexString[3];
+
+        itoa(index, indexString, 10);
+
+        _client.sendTXT("switch," + (String)_chipId + "," + String(indexString) + "," + state);
     }
 };
 
