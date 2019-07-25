@@ -5,7 +5,7 @@
 #include <EEPROM.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
-#include <WebSocketsClient.h>
+#include "../lib/arduinoWebSockets/src/WebSocketsClient.h"
 
 struct CqIotClientConfiguration
 {
