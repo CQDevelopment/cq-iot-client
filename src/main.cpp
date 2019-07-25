@@ -1,9 +1,10 @@
 #include <Arduino.h>
 #include <cq_iot_client.h>
 
-#define PIN_ACTION D7
+#define PIN_ACTION D1
+#define PIN_PIR D5
 
-const uint8_t switchPins[] = {D1, D2, D5};
+const uint8_t switchPins[] = {D6};
 
 CqIotClient client(true);
 
@@ -30,9 +31,13 @@ void setup()
     pinMode(switchPins[i], OUTPUT);
   }
 
-  client.SwitchCount = 3;
+  pinMode(PIN_PIR, INPUT);
+
+  client.SwitchCount = sizeof(switchPins);
   client.SwitchGetFunction = &switchGet;
   client.SwitchSetFunction = &switchSet;
+
+  client.PushCount = 1;
 
   if (digitalRead(PIN_ACTION) == LOW)
   {
@@ -42,6 +47,21 @@ void setup()
   client.Begin();
 }
 
+int lastPirState = LOW;
+
 void loop()
 {
+  int pirState = digitalRead(PIN_PIR);
+
+  if (pirState == HIGH)
+  {
+    if (lastPirState == LOW)
+    {
+      client.SendPush(0, "Alarm");
+    }
+  }
+
+  lastPirState = pirState;
+
+  client.Loop();
 }

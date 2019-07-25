@@ -13,6 +13,7 @@ struct CqIotClientConfiguration
     char ssid[128] = "";
     char password[128] = "";
     char server[128] = "";
+    char accountId[128] = "";
     uint16_t port = 0;
 };
 
@@ -77,7 +78,7 @@ private:
         _server.on("/", [this]() {
             log("HTTP: / requested");
 
-            String html = "<html><head><title>CQ Device Configurator</title><style>body { font-size: 16px; font-family: sans-serif; }</style></head><body><form method=\"POST\" action=\"/post\"><table><tr><td>SSID</td><td><input name=\"ssid\" type=\"text\" /></td></tr><tr><td>Password</td><td><input name=\"password\" type=\"password\" /></td></tr><tr><td>Server</td><td><input name=\"server\" type=\"text\" /></td></tr><tr><td>Port</td><td><input name=\"port\" type=\"number\" /></td></tr><tr><td>&nbsp;</td><td><button type=\"submit\">Submit</button></td></tr></table></form></body></html>";
+            String html = "<html><head><title>CQ Device Configurator</title><style>body { font-size: 16px; font-family: sans-serif; }</style></head><body><form method=\"POST\" action=\"/post\"><table><tr><td>SSID</td><td><input name=\"ssid\" type=\"text\" /></td></tr><tr><td>Password</td><td><input name=\"password\" type=\"password\" /></td></tr><tr><td>Server</td><td><input name=\"server\" type=\"text\" /></td></tr><tr><td>Port</td><td><input name=\"port\" type=\"number\" /></td></tr><tr><td>Account ID</td><td><input name=\"accountId\" type=\"text\" /></td></tr><tr><td>&nbsp;</td><td><button type=\"submit\">Submit</button></td></tr></table></form></body></html>";
 
             _server.send(200, "text/html", html);
         });
@@ -92,6 +93,7 @@ private:
             strcpy(_configuration.password, _server.arg("password").c_str());
             strcpy(_configuration.server, _server.arg("server").c_str());
             _configuration.port = atoi(_server.arg("port").c_str());
+            strcpy(_configuration.accountId, _server.arg("accountId").c_str());
 
             EEPROM.put(0, _configuration);
             EEPROM.commit();
@@ -140,7 +142,7 @@ private:
             itoa(PushCount, buffer, 10);
             String pushCount = (String)buffer;
 
-            _client.sendTXT("register," + (String)_chipId + "," + switchCount + ',' + sensorCount + ',' + pushCount);
+            _client.sendTXT("register," + (String)_configuration.accountId + "," + (String)_chipId + "," + switchCount + ',' + sensorCount + ',' + pushCount);
 
             log("Registration sent");
 
@@ -192,6 +194,7 @@ private:
         log("Password: " + (String)_configuration.password);
         log("Server:   " + (String)_configuration.server);
         log("Port:     " + (String)_configuration.port);
+        log("Account:  " + (String)_configuration.accountId);
 
         log("Connecting to wireless network");
 
@@ -220,18 +223,16 @@ private:
 
         _client.begin(_configuration.server, _configuration.port, "/");
 
-        log("Starting client loop");
+        log("Ready for client loop");
+    }
 
-        while (true)
-        {
-            _client.loop();
+    char *getIndexString(uint8_t index)
+    {
+        char indexString[3];
 
-            if (!_connected)
-            {
-                log("Not connected, waiting...");
-                delay(1000);
-            }
-        }
+        itoa(index, indexString, 10);
+
+        return indexString;
     }
 
 public:
@@ -254,7 +255,7 @@ public:
 
         log("Initialising EEPROM");
 
-        EEPROM.begin(512);
+        EEPROM.begin(1024);
 
         sprintf(_chipId, "%x", ESP.getChipId());
 
@@ -287,13 +288,25 @@ public:
         connect();
     }
 
+    void Loop()
+    {
+        _client.loop();
+
+        if (!_connected)
+        {
+            log("Not connected, waiting...");
+            delay(1000);
+        }
+    }
+
     void SendSwitchState(uint8_t index, boolean state)
     {
-        char indexString[3];
+        _client.sendTXT("switch," + (String)_configuration.accountId + "," + (String)_chipId + "," + String(getIndexString(index)) + "," + state);
+    }
 
-        itoa(index, indexString, 10);
-
-        _client.sendTXT("switch," + (String)_chipId + "," + String(indexString) + "," + state);
+    void SendPush(uint8_t index, String value)
+    {
+        _client.sendTXT("push," + (String)_configuration.accountId + "," + (String)_chipId + "," + String(getIndexString(index)) + "," + value);
     }
 };
 
