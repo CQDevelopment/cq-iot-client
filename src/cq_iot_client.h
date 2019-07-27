@@ -5,7 +5,7 @@
 #include <EEPROM.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
-#include <WebSocketsClient.h> 
+#include <WebSocketsClient.h>
 
 struct CqIotClientConfiguration
 {
@@ -267,10 +267,11 @@ public:
         CqIotClient(false);
     }
 
-    // this has to be called before Begin()
     void ClearConfiguration()
     {
         log("Clearing configuration");
+
+        _configuration.configured = false;
 
         EEPROM.put(0, _configuration);
         EEPROM.commit();
@@ -307,6 +308,11 @@ public:
     void SendPush(uint8_t index, String value)
     {
         _client.sendTXT("push," + (String)_configuration.accountId + "," + (String)_chipId + "," + String(getIndexString(index)) + "," + value);
+    }
+
+    bool IsConnected()
+    {
+        return _connected;
     }
 };
 
